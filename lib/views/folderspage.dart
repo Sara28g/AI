@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:projectaig/views/recordings_page.dart';
 
 final Color lightperiwinkle = const Color(0xFFBBA5E3);
 final Color lightLavender = const Color(0xFFD8BDDB);

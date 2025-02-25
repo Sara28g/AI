@@ -1,23 +1,9 @@
-
-import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
 import 'package:projectaig/views/HelpMap.dart';
 import 'package:projectaig/views/HomePage.dart';
 import 'package:projectaig/views/folderspage.dart';
-
-
-void main() {
-  runApp(
-    MaterialApp(
-      theme: ThemeData(
-        primaryColor: const Color(0xFFBBA5E3),
-        scaffoldBackgroundColor: const Color(0xFFD8BDDB).withOpacity(0.3),
-      ),
-      home: const NavigationLayout(),
-      debugShowCheckedModeBanner: false,
-    ),
-  );
-}
+import 'package:projectaig/views/recordings_page.dart';
+import 'main_page.dart';
 
 // Main widget that handles navigation and layout
 class NavigationLayout extends StatefulWidget {
@@ -25,12 +11,12 @@ class NavigationLayout extends StatefulWidget {
 
   @override
   State<NavigationLayout> createState() => _NavigationLayoutState();
-
 }
 
 class _NavigationLayoutState extends State<NavigationLayout> {
   // Track which tab is currently selected
   String activeTab = 'home';
+  String previousTab = 'home'; // Track previous tab for returning from medicine
 
   // App colors - defined here for easy access and modification
   final Color lightperiwinkle = const Color(0xFFBBA5E3);
@@ -50,8 +36,19 @@ class _NavigationLayoutState extends State<NavigationLayout> {
       // Main app content
       body: Stack(
         children: [
-          _buildMainContent(),
-          _buildBottomNavBar(),
+          // Main content that doesn't extend behind the nav bar
+          Positioned.fill(
+            bottom: 65, // Height of the nav bar to avoid overlap
+            child: _buildMainContent(),
+          ),
+
+          // Bottom nav bar at the bottom z-index
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: _buildBottomNavBar(),
+          ),
         ],
       ),
     );
@@ -107,128 +104,132 @@ class _NavigationLayoutState extends State<NavigationLayout> {
               print('Edit Voice tapped');
             },
           ),
+          if (activeTab == 'medicine')
+            _buildDrawerItem(
+              Icons.arrow_back,
+              'Return to Home',
+                  () {
+                setState(() {
+                  activeTab = previousTab;
+                });
+              },
+            ),
         ],
-
       ),
     );
   }
 
   Widget _buildMainContent() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 80), // Space for bottom nav
-      child: Column(
-        children: [
-          if (activeTab != 'medicine')
-            Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 40, right: 16),
-                child: Builder(
-                  builder: (context) => IconButton(
-                    icon: Icon(Icons.menu_open, color: lightperiwinkle, size: 30),
-                    onPressed: () => Scaffold.of(context).openEndDrawer(),
-                  ),
-                ),
+    return Column(
+      children: [
+        // Only show the menu button on home screen, not on folders or medicine screens
+        if (activeTab == 'home')
+          Container(
+            alignment: Alignment.topRight,
+            padding: const EdgeInsets.only(top: 40, right: 16),
+            child: Builder(
+              builder: (context) => IconButton(
+                icon: Icon(Icons.menu_open, color: mediumPurple, size: 30),
+                onPressed: () => Scaffold.of(context).openEndDrawer(),
               ),
             ),
-          // Page content in center
-          Expanded(
-            child: Center(
-              child: _buildContent(),
+          ),
+        // Page content in center
+        Expanded(
+          child: Center(
+            child: _buildContent(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Build the content for each tab
+  Widget _buildContent() {
+    // Show different content based on active tab
+    switch (activeTab) {
+      case 'home':
+        return Homepage();
+      case 'folders':
+        return MainPagem();
+      case 'medicine':
+      // Pass a callback to HelpMapScreen to allow navigation
+        return HelpMapScreen(
+          onNavigate: (String tab) {
+            setState(() {
+              activeTab = tab;
+            });
+          },
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  // Build the bottom navigation bar with FAB style buttons
+  Widget _buildBottomNavBar() {
+    return Container(
+      height: 85, // Taller container to accommodate raised buttons
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          // The nav bar background
+          Container(
+            height: 65.0,
+            decoration: BoxDecoration(
+              color: mediumPurple,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
             ),
+          ),
+
+          // The floating buttons row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildFloatingNavButton('folders', Icons.folder_outlined, Icons.folder, 'Folders'),
+              _buildFloatingNavButton('home', Icons.home_outlined, Icons.home, 'Home'),
+              _buildFloatingNavButton('medicine', Icons.medical_services_outlined, Icons.medical_services, 'Medicine'),
+            ],
           ),
         ],
       ),
     );
   }
 
-  // Build the content for each tab
-  Widget _buildContent() {
-    final style = TextStyle(
-      color: lightperiwinkle,
-      fontSize: 24,
-      fontWeight: FontWeight.bold,
-    );
-
-    // Show different content based on active tab
-    switch (activeTab) {
-      case 'home':
-        return Homepage();
-      case 'folders':
-        return Folderspage();
-      case 'medicine':
-        return HelpMapScreen();
-      default:
-        return const SizedBox.shrink();
-    }
-  }
-
-  // Build the bottom navigation bar
-  Widget _buildBottomNavBar() {
-    if (activeTab == 'medicine')
-      return SizedBox.shrink();
-
-      return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        height: 80,
-        decoration: BoxDecoration(
-          color: lightperiwinkle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavButton('home', Icons.home_outlined, Icons.home, 'Home'),
-            _buildNavButton('folders', Icons.folder_outlined, Icons.folder, 'Folders'),
-            _buildNavButton('medicine', Icons.medical_services_outlined, Icons.medical_services, 'Medicine'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavButton(String tab, IconData outlinedIcon, IconData filledIcon, String label) {
+  Widget _buildFloatingNavButton(String tab, IconData outlinedIcon, IconData filledIcon, String label) {
     bool isActive = activeTab == tab;
 
-
-
-      return GestureDetector(
+    return InkWell(
       onTap: () {
-        setState(() => activeTab = tab);
+        setState(() {
+          if (tab == 'medicine' && activeTab != 'medicine') {
+            previousTab = activeTab;
+          }
+          activeTab = tab;
+        });
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+      splashFactory: NoSplash.splashFactory, // No splash effect
+      highlightColor: Colors.transparent, // No highlight color
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        width: 50,
+        height: 50,
+        transform: Matrix4.translationValues(0, isActive ? -20 : 0, 0),
         decoration: BoxDecoration(
-          color: isActive ? mediumPurple : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          color: isActive ? lightperiwinkle : mediumPurple,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: isActive ? Colors.white : Colors.transparent,
+            width: 1,
+          ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isActive ? filledIcon : outlinedIcon,
-              color: Colors.white,
-              size: 28,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
+        child: Icon(
+          isActive ? filledIcon : outlinedIcon,
+          color: Colors.white,
+          size: 24,
         ),
       ),
     );
@@ -237,16 +238,16 @@ class _NavigationLayoutState extends State<NavigationLayout> {
   // Build a menu item for the drawer
   Widget _buildDrawerItem(IconData icon, String label, VoidCallback onTapAction) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
       leading: Icon(
         icon,
-        color: lightperiwinkle,
+        color: mediumPurple,
         size: 24,
       ),
       title: Text(
         label,
         style: TextStyle(
-          color: lightperiwinkle,
+          color: mediumPurple,
           fontSize: 16,
           fontWeight: FontWeight.w500,
         ),
@@ -261,5 +262,4 @@ class _NavigationLayoutState extends State<NavigationLayout> {
       hoverColor: lightLavender,
     );
   }
-
 }

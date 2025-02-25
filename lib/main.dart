@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:projectaig/views/splashscreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'service/photo_monitoring_service.dart';
+import 'service/sound_monitoring_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -9,7 +13,23 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  runApp(const SecretCalculatorApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => CameraService()..initialize(),
+        ),
+        ChangeNotifierProxyProvider<CameraService, SoundMonitoringService>(
+          create: (context) => SoundMonitoringService(
+            context.read<CameraService>(),
+          )..initialize(),
+          update: (context, cameraService, previous) =>
+          previous ?? SoundMonitoringService(cameraService)..initialize(),
+        ),
+      ],
+      child: const SecretCalculatorApp(),
+    ),
+  );
 }
 
 class SecretCalculatorApp extends StatelessWidget {
@@ -43,11 +63,25 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   String _secretCode = "";
   bool _hasCodeBeenSet = false;
   bool _isSettingCodeMode = false;
+  bool _hasPermission = false;
+
 
   @override
   void initState() {
     super.initState();
     _loadSecretCode();
+    _requestPermissions();
+  }
+  Future<void> _requestPermissions() async {
+    final status = await Permission.microphone.request();
+    setState(() {
+      _hasPermission = status.isGranted;
+    });
+
+    if (_hasPermission) {
+      await context.read<SoundMonitoringService>().initialize();
+    }
+    context.read<SoundMonitoringService>().startMonitoring();
   }
 
   // Load the secret code from shared preferences
@@ -200,6 +234,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
       // Handle different button presses
       if (buttonText == "C") {
+        context.read<SoundMonitoringService>().startMonitoring();
         _display = "0";
         _currentInput = "";
       } else if (buttonText == "⌫") {

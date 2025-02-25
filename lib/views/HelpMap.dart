@@ -38,7 +38,10 @@ class Organization {
 }
 
 class HelpMapScreen extends StatefulWidget {
-  const HelpMapScreen({Key? key}) : super(key: key);
+  // Add a navigation callback parameter
+  final Function(String)? onNavigate;
+
+  const HelpMapScreen({Key? key, this.onNavigate}) : super(key: key);
 
   @override
   State<HelpMapScreen> createState() => _HelpMapScreenState();
@@ -145,7 +148,6 @@ class _HelpMapScreenState extends State<HelpMapScreen> {
           {"name": "Wellness Support Center", "label": "Wellness"},
         ],
       ),
-
     };
   }
 
@@ -184,9 +186,9 @@ class _HelpMapScreenState extends State<HelpMapScreen> {
 
   String _getDescriptionForCategory(ServiceCategory category) {
     switch (category) {
-      case ServiceCategory.shelter:
       case ServiceCategory.jobs:
         return "Employment resources, job training, career counseling, and professional development programs.";
+      case ServiceCategory.shelter:
         return "Confidential emergency shelter providing safe housing and support services for women and children fleeing abuse.";
       case ServiceCategory.crisis:
         return "24/7 emergency response and crisis intervention services for women in immediate need of assistance.";
@@ -198,7 +200,6 @@ class _HelpMapScreenState extends State<HelpMapScreen> {
         return "Community-based support services and advocacy, connecting women with resources and peer support networks.";
       case ServiceCategory.medical:
         return "Confidential medical care and health services specialized for women affected by abuse and trauma.";
-
     }
   }
 
@@ -218,7 +219,6 @@ class _HelpMapScreenState extends State<HelpMapScreen> {
         return 'Community';
       case ServiceCategory.medical:
         return 'Medical';
-
     }
   }
 

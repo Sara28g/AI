@@ -7,6 +7,8 @@ final Color mediumPurple = const Color(0xFF7D66B8);     // Medium shade for acce
 final Color vibrantPink = const Color(0xFFB40085);
 
 class Homepage extends StatelessWidget {
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,7 +27,7 @@ class Homepage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Welcome',
+              '',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 32,
